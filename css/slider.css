@@ -1,17 +1,24 @@
-#slider {
-    width: 720px;
-    height: 400px;
-    overflow: hidden;
+.slider {
+    width: 620px;
+    max-width: 620px;
     margin: auto;
+    /*height: 400px;*/
+}
+
+#slider {
+    overflow: hidden;
+    width: 620px;
+    /*height: 400px;
+    margin: auto;*/
 }
 
 #slider .slides {
     display: block;
     width: 6000px;
-    height: 400px;
     margin: 0;
-    margin-left: -720px;
+    margin-left: -620px;
     padding: 0;
+    /*height: 400px;*/
 }
 
 #slider .slides:hover {
@@ -21,8 +28,9 @@
 #slider .slide {
     float: left;
     list-style-type: none;
-    max-width: 720px;
-    max-height: 400px;
+    width: 620px;
+    max-width: 620px;
+    /*max-height: 400px;*/
 }
 
 #slider .slide img {
@@ -33,7 +41,7 @@
 
 .slider-nav {
     text-align: center;
-    margin-top: 20px;
+    margin-top: 10px;
 }
 
 .arrow-next {
@@ -57,7 +65,7 @@
     margin-top: 5px;
 }
 
-.slider-dots:hover {
+.slider-dots .dot:hover {
   cursor: pointer;
 }
 
