@@ -17,6 +17,7 @@
   var pluginName = 'slider',
   	  privateVar = null,
   	  interval,
+      isButtonClicked = false,
   	  isDotClicked = false,
   	  currentSlide = 1, distance = 0,
   	  mouseActions = {
@@ -86,10 +87,10 @@
     buildArrows: function(){
     	var that = this;
     	var $arrowNext = '<a href="#" class="' + that.options.nextClass
-    					 + '"><img src="' + that.options.nextImgSrc + '" /></a>',
-    		$arrowPrev = '<a href="#" class="' + that.options.prevClass
-    					 + '"><img src="' + that.options.prevImgSrc + '" /></a>';
-		that.element.after($arrowNext).after($arrowPrev).nextAll().wrapAll('<div class="slider-nav">');
+    					         + '"><img src="' + that.options.nextImgSrc + '" /></a>',
+    		  $arrowPrev = '<a href="#" class="' + that.options.prevClass
+    					         + '"><img src="' + that.options.prevImgSrc + '" /></a>';
+		  that.element.after($arrowNext).after($arrowPrev).nextAll().wrapAll('<div class="slider-nav">');
     },
 
     buildDots: function(dotQuantity){
@@ -127,7 +128,9 @@
     toDot: function(element){
       var that = this;
       if(!isDotClicked){
+        clearInterval(interval);
         isDotClicked = true;
+        isButtonClicked = true;
         that.$slideContainer.off('mouseup');
         var index = $(element).index(),
         	indexActive = that.$activeDot.index();
@@ -137,20 +140,30 @@
           that.$activeDot.removeClass(that.options.dotActiveClass);
           that.$activeDot = $(element).addClass(that.options.dotActiveClass);
           isDotClicked = false;
+          isButtonClicked = false;
           that.$slideContainer.on("mouseup", {that: that}, that.mouseup);
+          that.startSlider();
         });
       }
     },
 
     buttonClicked: function(event) {
       var that = event.data.that;
-      that.$slideContainer.off('mouseup');
-      that.animate(event.data.margin, function() {
-        that.setDefaultMargin(event.data.isNext);
-        that.$activeDot.removeClass(that.options.dotActiveClass);
-        that.$activeDot = that.$dot.eq(currentSlide - 1).addClass(that.options.dotActiveClass);
-        that.$slideContainer.on("mouseup", {that: that}, that.mouseup);
-      });
+      if(!isButtonClicked){
+        clearInterval(interval);
+        isButtonClicked = true;
+        isDotClicked = true;
+        that.$slideContainer.off('mouseup');
+        that.animate(event.data.margin, function() {
+          that.setDefaultMargin(event.data.isNext);
+          that.$activeDot.removeClass(that.options.dotActiveClass);
+          that.$activeDot = that.$dot.eq(currentSlide - 1).addClass(that.options.dotActiveClass);
+          that.$slideContainer.on("mouseup", {that: that}, that.mouseup);
+          isButtonClicked = false;
+          isDotClicked = false;
+          that.startSlider();
+        });
+      }
     },
 
     slideChange: function(e, hasUp){
@@ -269,6 +282,7 @@
         interval = setInterval(function() {
       	  mouseActions = setActions(true, true, true, mouseActions.hasEnter);
   		    isDotClicked = true;
+          isButtonClicked = true;
           that.$slideContainer.animate(
       	  	{'margin-left': '-=' + that.width},
       	  	that.options.animationSpeed, function() {
@@ -280,6 +294,7 @@
             	that.$activeDot = that.$dot.eq(currentSlide - 1).addClass(that.options.dotActiveClass);
             	mouseActions = setActions(false, false, false, mouseActions.hasEnter);
             	isDotClicked = false;
+              isButtonClicked = false;
           });
         }, that.options.pauseTime);
       }
