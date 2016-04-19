@@ -11,34 +11,32 @@
  *    publicMethod
  *    destroy
  */
-(function($, window, undefined) {
+;(function($, window, undefined) {
   'use strict';
 
   var pluginName = 'slider',
-  	  privateVar = null,
-  	  interval,
+      privateVar = null,
+      interval,
       isButtonClicked = false,
-  	  isDotClicked = false,
-  	  currentSlide = 1, distance = 0,
-  	  mouseActions = {
-    	hasDown: false,
-	    hasUp: false,
-	    hasLeft: false,
-	    hasEnter: false
-	  };
+      isDotClicked = false,
+      currentSlide = 1, distance = 0,
+      mouseActions = {
+        hasDown: false,
+        hasUp: false,
+        hasLeft: false
+     };
 
-  var getClass = function(className){
+  function getClass(className){
     return $('.' + className);
-  };
+  }
 
-  var setActions = function(hasDown, hasUp, hasLeft, hasEnter){
+  function setActions(hasDown, hasUp, hasLeft){
     return {
       hasDown: hasDown,
       hasUp: hasUp,
-      hasLeft: hasLeft,
-      hasEnter: hasEnter
+      hasLeft: hasLeft
     };
-  };
+  }
 
   function Slider(element, options) {
     this.element = $(element);
@@ -73,9 +71,9 @@
       this.startSlider();
 
       this.$slideContainer.on('mousedown', {that: that}, that.mousedown)
-              					  .on('mouseup', {that: that}, that.mouseup)
-              					  .on('mouseleave', {that: that}, that.mouseleave)
-                				  .on('mouseenter', that.mouseenter);
+                          .on('mouseup', {that: that}, that.mouseup)
+                          .on('mouseleave', {that: that}, that.mouseleave)
+                          .on('mouseenter', that.mouseenter);
 
       this.$dot.click(function(){
         that.toDot(this);
@@ -85,22 +83,22 @@
     },
 
     buildArrows: function(){
-    	var that = this;
-    	var $arrowNext = '<a href="#" class="' + that.options.nextClass
-    					         + '"><img src="' + that.options.nextImgSrc + '" /></a>',
-    		  $arrowPrev = '<a href="#" class="' + that.options.prevClass
-    					         + '"><img src="' + that.options.prevImgSrc + '" /></a>';
-		  that.element.after($arrowNext).after($arrowPrev).nextAll().wrapAll('<div class="slider-nav">');
+      var that = this;
+      var $arrowNext = '<a href="#" class="' + that.options.nextClass
+                       + '"><img src="' + that.options.nextImgSrc + '" /></a>',
+          $arrowPrev = '<a href="#" class="' + that.options.prevClass
+                       + '"><img src="' + that.options.prevImgSrc + '" /></a>';
+      that.element.after($arrowNext).after($arrowPrev).nextAll().wrapAll('<div class="slider-nav">');
     },
 
     buildDots: function(dotQuantity){
-    	var that = this,
-    		i;
-    	for(i = 0; i < dotQuantity; i++){
-    		that.$arrowPrev.after($('<li />').addClass(this.options.dotClass).html('&bull;'));
-    	}
-    	that.$arrowPrev.next().addClass(that.options.dotActiveClass);
-    	that.$arrowPrev.nextUntil(that.$arrowNext).wrapAll('<ul class="slider-dots">');
+      var that = this,
+        i;
+      for(i = 0; i < dotQuantity; i++){
+        that.$arrowPrev.after($('<li />').addClass(this.options.dotClass).html('&bull;'));
+      }
+      that.$arrowPrev.next().addClass(that.options.dotActiveClass);
+      that.$arrowPrev.nextUntil(that.$arrowNext).wrapAll('<ul class="slider-dots">');
     },
 
     animate: function(margin, callback){
@@ -129,11 +127,12 @@
       var that = this;
       if(!isDotClicked){
         clearInterval(interval);
+        mouseActions = setActions(true, true, true);
         isDotClicked = true;
         isButtonClicked = true;
         that.$slideContainer.off('mouseup');
         var index = $(element).index(),
-        	indexActive = that.$activeDot.index();
+          indexActive = that.$activeDot.index();
         currentSlide = index + 1;
         var margin = -that.width * currentSlide;
         that.animate(margin, function() {
@@ -141,8 +140,10 @@
           that.$activeDot = $(element).addClass(that.options.dotActiveClass);
           isDotClicked = false;
           isButtonClicked = false;
+          if(mouseActions.hasLeft)
+            that.startSlider();
+          mouseActions = setActions(false, false, false);
           that.$slideContainer.on("mouseup", {that: that}, that.mouseup);
-          that.startSlider();
         });
       }
     },
@@ -153,6 +154,7 @@
         clearInterval(interval);
         isButtonClicked = true;
         isDotClicked = true;
+        mouseActions = setActions(true, true, true);
         that.$slideContainer.off('mouseup');
         that.animate(event.data.margin, function() {
           that.setDefaultMargin(event.data.isNext);
@@ -161,16 +163,18 @@
           that.$slideContainer.on("mouseup", {that: that}, that.mouseup);
           isButtonClicked = false;
           isDotClicked = false;
-          that.startSlider();
+          if(mouseActions.hasLeft)
+            that.startSlider();
+          mouseActions = setActions(false, false, false);
         });
       }
     },
 
     slideChange: function(e, hasUp){
       var that = this,
-      	  pDistance = Math.abs(distance),
-      	  marginLeft = (distance > 0) ? (-that.width * (currentSlide + 1))
-      	  							  : (-that.width * (currentSlide - 1));
+          pDistance = Math.abs(distance),
+          marginLeft = (distance > 0) ? (-that.width * (currentSlide + 1))
+                          : (-that.width * (currentSlide - 1));
       if(pDistance < 100){
         marginLeft = -that.width * currentSlide;
       }
@@ -178,18 +182,12 @@
         pDistance > 100 && that.setDefaultMargin(distance > 0);
         that.$activeDot.removeClass(that.options.dotActiveClass);
         that.$activeDot = that.$dot.eq(currentSlide - 1).addClass(that.options.dotActiveClass);
-        if(hasUp) {
-          that.$slideContainer.on("mouseleave", {that: that}, that.mouseleave);
-          //that.$slideContainer.trigger('mouseleave');
-        }
-        else { 
-          that.$slideContainer.on("mouseup", {that: that}, that.mouseup);
+        if(mouseActions.hasLeft) {
           that.startSlider();
         }
-        //var hasEnter = (mouseActions.hasUp && !mouseActions.hasLeft) ? false : true;
-        mouseActions = setActions(false, false, mouseActions.hasLeft, mouseActions.hasEnter);
-        /*console.log(mouseActions.hasEnter);
-        that.$slideContainer.trigger('mouseleave');*/
+        mouseActions = setActions(false, false, mouseActions.hasLeft);
+        isButtonClicked = false;
+        isDotClicked = false;
       });
     },
 
@@ -211,14 +209,15 @@
     },
 
     mousedown: function(e){
-      console.log('down');
       e.preventDefault();
       var that = e.data.that;
       if(!mouseActions.hasDown){
         distance = 0;
-        mouseActions = setActions(true, false, false, mouseActions.hasEnter);
+        mouseActions = setActions(true, false, false);
+        isButtonClicked = true;
+        isDotClicked = true;
         var xDefault = e.pageX;
-        that.$slideContainer.on('mousemove', function(event){
+        that.$slideContainer.off('mousemove').on('mousemove', function(event){
           distance += xDefault - event.pageX;
           if(xDefault != event.pageX){
             that.$slideContainer.animate({'margin-left': '+=' + (event.pageX - xDefault)}, 0);
@@ -229,72 +228,52 @@
     },
 
     mouseup: function(e){
-      console.log('up');
       var that = e.data.that;
       if(!mouseActions.hasUp && mouseActions.hasDown){
-        that.$slideContainer.off("mousemove mouseleave");
+        that.$slideContainer.off("mousemove");
         mouseActions.hasUp = true;
-        mouseActions.hasDown = false;
         if (distance != 0){
-          console.log('up, left:', mouseActions.hasLeft);
           that.slideChange(e, true);          
-         //that.$slideContainer.on("mouseleave", {that: that}, that.mouseleave);
         }
         else {
-          mouseActions = setActions(false, false, false, mouseActions.hasEnter);
-          that.$slideContainer.on("mouseleave", {that: that}, that.mouseleave);
+          mouseActions = setActions(false, false, false);
         }
       }
     },
 
     mouseleave: function(e){
       var that = e.data.that;
-      console.log('leave');
-      mouseActions.hasEnter = mouseActions.hasEnter ? false : true;
       if(!mouseActions.hasUp && !mouseActions.hasDown){
-        console.log(mouseActions);
-        console.log('1');
-        that.$slideContainer.off("mousemove mouseup");
-        that.slideChange(e, false);
+        that.startSlider();
       }
-     /*else if(mouseActions.hasUp && !mouseActions.hasDown){
-        console.log('2');
-        mouseActions.hasEnter = false;
-        that.$slideContainer.trigger('mouseleave');
-      }*/
-      else if(!mouseActions.hasEnter){
-        console.log('3');
-        that.$slideContainer.off("mousemove mouseup");
-        that.slideChange(e, false);
+      else if(!mouseActions.hasUp && mouseActions.hasDown){
+        that.$slideContainer.trigger('mouseup');
       }
-      console.log('4');
       mouseActions.hasLeft = true;
     },
 
     mouseenter: function(){
-    	clearInterval(interval);
-    	mouseActions.hasEnter = true;
+      clearInterval(interval);
+      mouseActions.hasLeft = false;
     },
 
     startSlider: function(){
       var that = this;
       if(that.options.autoPlay){
         interval = setInterval(function() {
-      	  mouseActions = setActions(true, true, true, mouseActions.hasEnter);
-  		    isDotClicked = true;
-          isButtonClicked = true;
-          that.$slideContainer.animate(
-      	  	{'margin-left': '-=' + that.width},
-      	  	that.options.animationSpeed, function() {
-        	  	if (++currentSlide == that.$slide.length + 1) {
-            	  currentSlide = 1;
-            	  that.$slideContainer.css('margin-left', -that.width);
-        	  	}
-            	that.$activeDot.removeClass(that.options.dotActiveClass);
-            	that.$activeDot = that.$dot.eq(currentSlide - 1).addClass(that.options.dotActiveClass);
-            	mouseActions = setActions(false, false, false, mouseActions.hasEnter);
-            	isDotClicked = false;
-              isButtonClicked = false;
+            mouseActions = setActions(true, true, true);
+          isDotClicked = true;
+            isButtonClicked = true;
+            that.$slideContainer.animate({'margin-left': '-=' + that.width}, that.options.animationSpeed, function() {
+              if (++currentSlide == that.$slide.length + 1) {
+                currentSlide = 1;
+                that.$slideContainer.css('margin-left', -that.width);
+              }
+              that.$activeDot.removeClass(that.options.dotActiveClass);
+              that.$activeDot = that.$dot.eq(currentSlide - 1).addClass(that.options.dotActiveClass);
+              mouseActions = setActions(false, false, false);
+              isDotClicked = false;
+                isButtonClicked = false;
           });
         }, that.options.pauseTime);
       }
